@@ -1,0 +1,9 @@
+const Core = (()=>{
+const round=n=>Math.round((n+Number.EPSILON)*100)/100;
+const cost=p=>round(p.costs.reduce((s,n)=>s+(Number(n)||0),0));
+function pricing(c,mode,value,discount){if(![c,value,discount].every(Number.isFinite)||c<0||value<0||discount<0||discount>100)throw Error('راجع قيم التسعير');if(mode==='margin'&&value>=100)throw Error('هامش الربح يجب أن يكون أقل من 100%');const list=round(mode==='margin'?c/(1-value/100):mode==='markup'?c*(1+value/100):value),sale=round(list*(1-discount/100)),profit=round(sale-c);return {list,sale,profit,margin:sale?round(profit/sale*100):0,markup:c?round(profit/c*100):0,breakDiscount:list?round((1-c/list)*100):0};}
+function needs(lines){const result={};for(const l of lines)for(const c of l.components)result[c.id]=(result[c.id]||0)+c.qty*l.qty;return result;}
+function deliver(s,o){if(o.status==='delivered')throw Error('تم تسليم الطلب بالفعل');if(o.status==='cancelled')throw Error('الطلب ملغي');const req=needs(o.lines);for(const [id,q] of Object.entries(req)){const p=s.products.find(p=>p.id===id);if(!p||p.stock<q)throw Error('المخزون غير كافٍ: '+(p?.name||id));}for(const[id,q]of Object.entries(req)){s.products.find(p=>p.id===id).stock-=q;s.movements.push({id:crypto.randomUUID(),productId:id,qty:-q,reason:'تسليم '+o.number,date:new Date().toISOString()});}o.status='delivered';o.deliveredAt=new Date().toISOString();}
+function cancel(s,o){if(o.status==='cancelled')throw Error('الطلب ملغي بالفعل');if(o.status==='delivered'){for(const[id,q]of Object.entries(needs(o.lines))){s.products.find(p=>p.id===id).stock+=q;s.movements.push({id:crypto.randomUUID(),productId:id,qty:q,reason:'مرتجع '+o.number,date:new Date().toISOString()});}}o.status='cancelled';}
+return {round,cost,pricing,needs,deliver,cancel};})();
+if(typeof module!=='undefined')module.exports=Core;
