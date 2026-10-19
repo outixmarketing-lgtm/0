@@ -7,6 +7,6 @@ end = s.index('</style>', start)
 s = s[:start] + (root / 'style.css').read_text() + s[end:]
 start = s.index('<script>') + len('<script>')
 end = s.index('</script>', start)
-s = s[:start] + (root / 'core.js').read_text() + '\n' + (root / 'app.js').read_text() + s[end:]
+s = s[:start] + (root / 'core.js').read_text() + '\n' + (root / 'app.js').read_text() + '\n' + (root / 'cloud.js').read_text() + s[end:]
 p.write_text(s)
 print('Built standalone index.html')
